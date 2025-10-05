@@ -67,22 +67,28 @@ public class MinHeap<T extends Comparable<T>> {
         return minValue;
     }
 
-    // --- helpers ---
+    // --- Optimized ---
     private void percolateUp(int idx) {
+        HeapNode<T> node = heap[idx];
         while (idx > 1) {
             int parent = idx / 2;
 
             tracker.incComparisons();
             tracker.incArrayAccesses(2);
 
-            if (heap[idx].key.compareTo(heap[parent].key) < 0) {
-                swap(idx, parent);
+            if (node.key.compareTo(heap[parent].key) < 0) {
+                heap[idx] = heap[parent];
+                indexMap.put(heap[parent].id, idx);
                 idx = parent;
             } else break;
         }
+        heap[idx] = node;
+        indexMap.put(node.id, idx);
     }
 
+    // --- Optimized ---
     private void heapifyDown(int idx) {
+        HeapNode<T> node = heap[idx];
         while (true) {
             int left = 2 * idx;
             int right = left + 1;
@@ -91,23 +97,29 @@ public class MinHeap<T extends Comparable<T>> {
             if (left <= size) {
                 tracker.incComparisons();
                 tracker.incArrayAccesses(2);
-                if (heap[left].key.compareTo(heap[smallest].key) < 0) smallest = left;
+                if (heap[left].key.compareTo(node.key) < 0) smallest = left;
             }
 
             if (right <= size) {
                 tracker.incComparisons();
                 tracker.incArrayAccesses(2);
-                if (heap[right].key.compareTo(heap[smallest].key) < 0) smallest = right;
+                T smallestKey = (smallest == idx) ? node.key : heap[smallest].key;
+                if (heap[right].key.compareTo(smallestKey) < 0) smallest = right;
             }
 
             if (smallest != idx) {
-                swap(idx, smallest);
+                heap[idx] = heap[smallest];
+                indexMap.put(heap[smallest].id, idx);
                 idx = smallest;
             } else break;
         }
+        heap[idx] = node;
+        indexMap.put(node.id, idx);
     }
 
+    // --- Optimized ---
     private void swap(int i, int j) {
+        if (i == j) return;
         tracker.incSwaps();
         HeapNode<T> tmp = heap[i];
         heap[i] = heap[j];
@@ -141,11 +153,27 @@ public class MinHeap<T extends Comparable<T>> {
     }
 
 
+    // --- Optimized ---
+    @SuppressWarnings("unchecked")
     public void merge(MinHeap<T> other) {
-        for (int i = 1; i <= other.size; i++) {
-            tracker.incArrayAccesses();
-            this.insert(other.heap[i].key);
+        int newSize = this.size + other.size;
+        HeapNode<T>[] newHeap = new HeapNode[newSize + 1];
+        tracker.incAllocations();
+
+        System.arraycopy(this.heap, 1, newHeap, 1, this.size);
+        System.arraycopy(other.heap, 1, newHeap, this.size + 1, other.size);
+
+        this.heap = newHeap;
+        this.size = newSize;
+
+        indexMap.clear();
+        for (int i = 1; i <= size; i++) {
+            indexMap.put(heap[i].id, i);
+        }
+
+        // O(n) heapify build
+        for (int i = size / 2; i >= 1; i--) {
+            heapifyDown(i);
         }
     }
-
 }
