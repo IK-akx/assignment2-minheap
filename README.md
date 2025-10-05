@@ -46,6 +46,14 @@ java -cp target/classes cli.BenchmarkRunner \
 
 ```
 
+### With JMH
+```bash 
+mvn clean compile dependency:copy-dependencies
+```
+```bash
+java -cp "target/classes;target/dependency/*" cli.BenchmarkRunner
+```
+
 ---
 
 ### View results
