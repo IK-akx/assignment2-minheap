@@ -123,4 +123,29 @@ public class MinHeap<T extends Comparable<T>> {
         System.arraycopy(heap, 0, newHeap, 0, heap.length);
         heap = newHeap;
     }
+
+
+    public void decreaseKey(HeapHandle handle, T newKey) {
+        Integer idx = indexMap.get(handle.getId());
+        if (idx == null) {
+            throw new IllegalArgumentException("Invalid handle: element not found");
+        }
+
+        tracker.incArrayAccesses();
+        if (newKey.compareTo(heap[idx].key) > 0) {
+            throw new IllegalArgumentException("New key is greater than current key");
+        }
+
+        heap[idx].key = newKey;
+        percolateUp(idx);
+    }
+
+
+    public void merge(MinHeap<T> other) {
+        for (int i = 1; i <= other.size; i++) {
+            tracker.incArrayAccesses();
+            this.insert(other.heap[i].key);
+        }
+    }
+
 }
